@@ -35,7 +35,7 @@ pub fn get_args() -> MyResult<Config> {
         .arg(
             Arg::with_name("number_nonblank")
                 .short("b")
-                .long("number_nonblank")
+                .long("number-nonblank")
                 .help("Number nonblank lines")
                 .takes_value(false)
         )
@@ -53,9 +53,21 @@ pub fn run(config: Config) -> MyResult<()> {
         match open(&filename) {
             Err(err) => eprintln!("Faild to open {}: {}", filename, err),
             Ok(buf_reader) => {
-                for line in buf_reader.lines()  {
+                let mut last_num = 0;
+                for (line_num, line) in buf_reader.lines().enumerate() {
                     let line = line?;
-                    println!("{}", line);
+                    if config.number_lines {
+                        println!("{:>6}\t{}", line_num + 1, line);
+                    } else if config.number_nonblank_lines {
+                        if !line.is_empty() {
+                            last_num += 1;
+                            println!("{:>6}\t{}", last_num, line);
+                        } else {
+                            println!();
+                        }
+                    } else {
+                        println!("{}", line);
+                    }
                 }
             }
         }
